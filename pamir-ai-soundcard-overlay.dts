@@ -47,4 +47,18 @@
 			};
 		};
 	};
+
+	/* fragment@4: reserve GPIO26 as output-high at boot */
+	fragment@4 {
+		target = <&gpio>;
+		__overlay__ {
+			pamir_ai_gpio26 {
+				gpio-hog;
+				/* GPIO number, active-high */
+				gpios = <26 0>;
+				output-high;
+				line-name = "pamir-ai-gpio26";
+			};
+		};
+	};
 };
