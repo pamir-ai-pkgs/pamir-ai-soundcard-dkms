@@ -112,7 +112,7 @@ static struct snd_soc_dai_driver pamir_ai_dai = {
 #ifdef CONFIG_OF
 static const struct of_device_id pamir_ai_ids[] = {
 	{
-		.compatible = "pamir-ai,dummy_soundcard",
+		.compatible = "pamir-ai,soundcard",
 	},
 	{},
 };
@@ -157,6 +157,6 @@ static struct platform_driver pamir_ai_driver = {
 
 module_platform_driver(pamir_ai_driver);
 
-MODULE_DESCRIPTION("Pamir AI Dummy Soundcard driver");
-MODULE_AUTHOR("UtsavBalar <utsavbalar1231@gmail.com>");
+MODULE_DESCRIPTION("Pamir AI Soundcard driver");
+MODULE_AUTHOR("UtsavBala <utsavbalar1231@gmail.com>");
 MODULE_LICENSE("GPL v2");

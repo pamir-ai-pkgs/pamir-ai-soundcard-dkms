@@ -101,7 +101,7 @@ static struct snd_pamir_ai_simple_drvdata drvdata_pamir_ai = {
 };
 
 static const struct of_device_id snd_pamir_ai_simple_of_match[] = {
-	{ .compatible = "pamir-ai,soundcard",
+	{ .compatible = "pamir-ai,rpi-soundcard",
 		.data = (void *) &drvdata_pamir_ai },
 	{},
 };

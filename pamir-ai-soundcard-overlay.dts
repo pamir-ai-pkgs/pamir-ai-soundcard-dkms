@@ -16,25 +16,17 @@
 		};
 	};
 
-
 	fragment@1 {
 		target-path = "/";
 		__overlay__ {
-
 			pamir-ai-soundcard {
 				#sound-dai-cells = <0>;
-				compatible = "pamir-ai,dummy_soundcard";
+				compatible = "pamir-ai,soundcard";
 				status = "okay";
 			};
-		};
-	};
 
-	fragment@2 {
-		target-path = "/";
-		__overlay__ {
-
-			pamir_ai_sound_card: pamir-ai-sound {
-				compatible = "pamir-ai,soundcard";
+			pamir-ai-rpi-soundcard {
+				compatible = "pamir-ai,rpi-soundcard";
 				i2s-controller = <&i2s_clk_producer>;
 				status = "okay";
 			};
@@ -42,8 +34,7 @@
 	};
 
 	fragment@3 {
-        	target = <&i2c_arm>;
-
+		target = <&i2c_arm>;
 		__overlay__ {
 			#address-cells = <1>;
 			#size-cells = <0>;
