@@ -18,24 +18,29 @@ case "$1" in
             fi
         done
         
-        # Remove device tree overlay configuration from config.txt
+        # Remove device tree overlay and parameter configuration from config.txt
         CONFIG_FILE="/boot/firmware/config.txt"
         OVERLAY_LINE="dtoverlay=pamir-ai-soundcard"
+        I2C_ARM_LINE="dtparam=i2c_arm=on"
+        I2S_LINE="dtparam=i2s=on"
         COMMENT_LINE="# Pamir AI Soundcard - Added by pamir-ai-soundcard-dkms package"
         
         if [ -f "${CONFIG_FILE}" ]; then
-            echo "Removing device tree overlay configuration from ${CONFIG_FILE}..."
+            echo "Removing device tree overlay and parameter configuration from ${CONFIG_FILE}..."
             
-            # Create a temporary file without the overlay lines
+            # Create a temporary file without the pamir-ai lines
             TEMP_FILE=$(mktemp)
             
-            # Remove the overlay line and the comment line
-            grep -v "^${OVERLAY_LINE}" "${CONFIG_FILE}" | grep -v "^${COMMENT_LINE}" > "${TEMP_FILE}"
+            # Remove the overlay line, parameter lines, and the comment line
+            grep -v "^${OVERLAY_LINE}" "${CONFIG_FILE}" | \
+            grep -v "^${I2C_ARM_LINE}" | \
+            grep -v "^${I2S_LINE}" | \
+            grep -v "^${COMMENT_LINE}" > "${TEMP_FILE}"
             
             # Replace the original file
             mv "${TEMP_FILE}" "${CONFIG_FILE}"
             
-            echo "Device tree overlay configuration removed from ${CONFIG_FILE}"
+            echo "Device tree overlay and parameter configuration removed from ${CONFIG_FILE}"
         else
             echo "Warning: ${CONFIG_FILE} not found, skipping config removal"
         fi
