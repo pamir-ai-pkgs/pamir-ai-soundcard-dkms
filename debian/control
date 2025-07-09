@@ -1,0 +1,33 @@
+Source: pamir-ai-soundcard-dkms
+Section: kernel
+Priority: optional
+Maintainer: PamirAI Incorporated <founders@pamir.ai>
+Standards-Version: 4.6.0
+Build-Depends: debhelper-compat (= 13),
+               dkms,
+               device-tree-compiler
+Homepage: https://github.com/pamir-ai/distiller-cm5-kernel
+Vcs-Git: https://github.com/pamir-ai/distiller-cm5-kernel.git
+Vcs-Browser: https://github.com/pamir-ai/distiller-cm5-kernel
+
+Package: pamir-ai-soundcard-dkms
+Architecture: all
+Depends: ${misc:Depends},
+         dkms,
+         device-tree-compiler,
+         linux-headers-rpi-2712 | linux-headers-generic
+Recommends: alsa-utils
+Suggests: alsa-tools
+Description: Pamir AI Soundcard DKMS kernel modules
+ This package provides DKMS (Dynamic Kernel Module Support) modules
+ for the Pamir AI soundcard hardware on Raspberry Pi CM5 and Distiller
+ devices.
+ .
+ The package includes:
+  - pamir-ai-soundcard: Main soundcard driver
+  - pamir-ai-i2c-sound: I2C sound interface driver
+  - pamir-ai-rpi-soundcard: Raspberry Pi specific soundcard driver
+  - Device tree overlay for hardware configuration
+ .
+ These modules provide ALSA sound card interface with TLV320AIC3204
+ codec support and volume control via sysfs.

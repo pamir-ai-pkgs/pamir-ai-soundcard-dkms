@@ -1,0 +1,14 @@
+pamir-ai-soundcard-dkms (1.0.0-1) unstable; urgency=medium
+
+  * Initial release of Pamir AI Soundcard DKMS modules
+  * Support for Raspberry Pi CM5 and Distiller devices
+  * Includes three kernel modules:
+    - pamir-ai-soundcard: Main soundcard driver
+    - pamir-ai-i2c-sound: I2C sound interface driver
+    - pamir-ai-rpi-soundcard: Raspberry Pi specific soundcard driver
+  * Device tree overlay for hardware configuration
+  * TLV320AIC3204 codec support
+  * Volume control via sysfs interface
+  * ALSA sound card interface
+
+ -- PamirAI Incorporated <founders@pamir.ai>  $(date -R)
