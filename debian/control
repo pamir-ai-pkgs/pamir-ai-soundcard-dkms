@@ -15,7 +15,7 @@ Architecture: all
 Depends: ${misc:Depends},
          dkms,
          device-tree-compiler,
-         linux-headers-rpi-2712 | linux-headers-generic
+         linux-headers-rpi-2712
 Recommends: alsa-utils
 Suggests: alsa-tools
 Description: Pamir AI Soundcard DKMS kernel modules
