@@ -48,47 +48,62 @@ struct pamir_ai_i2c_sound_data {
  * Initialization sequence for the AIC3204 device,
  */
 static const struct reg_val init_sequence[] = {
-	/* select page 0 */
-	{ 0x01, 0x01 }, /* software reset */
-	{ 0x00, 0x00 }, /* select page 0 */
-	{ 0x0b, 0x81 }, /* ndac = 1, powered on */
-	{ 0x0c, 0x84 }, /* mdac = 2, modified for 3mhz */
-	{ 0x12, 0x81 }, /* nadc = 1, powered on */
-	{ 0x13, 0x84 }, /* madc = 4 */
-	{ 0x19, 0x07 }, /* cdiv_clkin = adc_mod_clk */
-	{ 0x1a, 0x81 }, /* divider = 1, powered up */
-	{ 0x34, 0x10 }, /* set gpio output */
-	{ 0x00, 0x01 }, /* select page 1 */
-	{ 0x02, 0x09 }, /* power up avdd ldo */
-	{ 0x01, 0x08 }, /* disable weak avdd */
-	{ 0x02, 0x01 }, /* enable master analog power */
-	{ 0x47, 0x32 }, /* input power-up time 3.1ms */
-	{ 0x7b, 0x01 }, /* ref charging time 40ms */
-	{ 0x00, 0x00 }, /* select page 0 */
-	{ 0x37, 0x0e }, /* change mfp4 */
-	{ 0x38, 0x02 }, /* change mfp3 */
-	{ 0x53, 0x23 }, /* adc left volume +20db */
-	{ 0x54, 0x23 }, /* adc right volume +20db */
-	{ 0x41, 0x30 }, /* adc +24db */
-	{ 0x42, 0x30 }, /* adc +24db */
-	{ 0x00, 0x01 }, /* select page 1 */
-	{ 0x14, 0x25 }, /* de-pop: 5 time constants */
-	{ 0x0c, 0x08 }, /* route ldac to hpl */
-	{ 0x0d, 0x08 }, /* route rdac to hpr */
-	{ 0x0e, 0x08 }, /* route ldac to lol */
-	{ 0x0f, 0x08 }, /* route rdac to lor */
-	{ 0x09, 0x3c }, /* power up hpl/hpr */
-	{ 0x10, 0x07 }, /* unmute hpl, 29db gain */
-	{ 0x11, 0x07 }, /* unmute hpr, 29db gain */
-	{ 0x12, 0x07 }, /* unmute lol, 29db gain */
-	{ 0x13, 0x07 }, /* unmute lor, 29db gain */
-	{ 0x00, 0x00 }, /* select page 0 */
-	{ 0x41, 0x00 }, /* dac left 0db */
-	{ 0x42, 0x00 }, /* dac right 0db */
-	{ 0x3f, 0xd6 }, /* power up ldac/rdac */
-	{ 0x40, 0x00 }, /* unmute ldac/rdac */
-	{ 0x51, 0xdc }, /* start dac and configure adc */
-	{ 0x52, 0x00 }, /* unmute adc */
+	/* Software reset and page selection */
+	{ 0x00, 0x00 }, /* Select Page 0 */
+	{ 0x01, 0x01 }, /* Initialize device through software reset */
+	/* Clock configuration - Page 0 */
+	{ 0x00, 0x00 }, /* Select Page 0 */
+	{ 0x0b, 0x81 }, /* NDAC = 1, dividers powered on */
+	{ 0x0c, 0x84 }, /* MDAC = 2, dividers powered on */
+	{ 0x12, 0x81 }, /* NADC = 1, dividers powered on (1000 0001) */
+	{ 0x13, 0x84 }, /* MADC = 4, dividers powered on (1000 0100) */
+	/* GPIO and clock output configuration */
+	{ 0x19, 0x07 }, /* CDIV_CLKIN = ADC_MOD_CLK (0111) */
+	{ 0x1a, 0x81 }, /* Divider = 1 and power up, CLKOUT = CDIV_CLKIN / 1 (3MHz) */
+	{ 0x34, 0x10 }, /* Set GPIO output */
+	/* Power management - Page 1 */
+	{ 0x00, 0x01 }, /* Select Page 1 */
+	{ 0x02, 0x09 }, /* Power up AVDD LDO */
+	{ 0x01, 0x08 }, /* Disable weak AVDD in presence of external AVDD supply */
+	{ 0x02, 0x01 }, /* Enable Master Analog Power Control, Power up AVDD LDO */
+	{ 0x21, 0x00 }, /* MICBIAS off */
+	{ 0x7b, 0x01 }, /* Set REF charging time to 40ms */
+	/* Audio routing and output configuration - Page 1 */
+	{ 0x00, 0x01 }, /* Select Page 1 */
+	{ 0x14, 0x25 }, /* De-pop: 5 time constants, 6k resistance */
+	{ 0x0c, 0x08 }, /* Route LDAC to HPL */
+	{ 0x0d, 0x08 }, /* Route RDAC to HPR */
+	{ 0x0e, 0x08 }, /* Route LDAC to LOL */
+	{ 0x0f, 0x08 }, /* Route RDAC to LOR */
+	{ 0x09, 0x3c }, /* Power up HPL/HPR (modified to configure LOL) */
+	{ 0x10, 0x07 }, /* Unmute HPL, 29dB gain (00 011101) */
+	{ 0x11, 0x07 }, /* Unmute HPR, 29dB gain */
+	{ 0x12, 0x07 }, /* Unmute LOL, 29dB gain */
+	{ 0x13, 0x07 }, /* Unmute LOR, 29dB gain */
+	/* ADC configuration - Page 1 */
+	{ 0x00, 0x01 }, /* Select Page 1 */
+	{ 0x34, 0x80 }, /* ADC configuration */
+	{ 0x36, 0x80 }, /* ADC configuration */
+	{ 0x37, 0x80 }, /* ADC configuration */
+	{ 0x39, 0x80 }, /* ADC configuration */
+	{ 0x3b, 0x0f }, /* PGA configuration */
+	{ 0x3c, 0x0f }, /* Right PGA + 47dB */
+	/* DAC and ADC initialization - Page 0 */
+	{ 0x00, 0x00 }, /* Select Page 0 */
+	{ 0x51, 0xc0 }, /* Change ADC channel and power (11000000) */
+	{ 0x52, 0x00 }, /* Unmute ADC */
+	/* Volume and gain settings - Page 0 */
+	{ 0x00, 0x00 }, /* Select Page 0 */
+	{ 0x53, 0x23 }, /* Set ADC left volume +20dB */
+	{ 0x54, 0x23 }, /* Set ADC right volume +20dB */
+	{ 0x41, 0x30 }, /* Set DAC left with +24dB */
+	{ 0x42, 0x30 }, /* Set DAC right with +24dB */
+	/* Final DAC configuration - Page 0 */
+	{ 0x00, 0x00 }, /* Select Page 0 */
+	{ 0x41, 0x00 }, /* DAC left => 0dB (overrides previous +24dB setting) */
+	{ 0x42, 0x00 }, /* DAC right => 0dB (overrides previous +24dB setting) */
+	{ 0x3f, 0xd6 }, /* Power up LDAC/RDAC */
+	{ 0x40, 0x00 }, /* Unmute LDAC/RDAC */
 };
 
 /**
