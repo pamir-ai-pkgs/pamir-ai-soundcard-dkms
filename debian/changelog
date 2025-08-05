@@ -1,3 +1,17 @@
+pamir-ai-soundcard-dkms (1.0.0-2) unstable; urgency=medium
+
+  [ utsavbalar1231 ]
+  * chore(debian): Improve error handling during installation
+  * chore: Rename multiple soundcard drivers compatible
+  * chore(debian): Handle i2c and i2s config from the package
+  * chore(overlay): Reserve and set gpio26 as output high
+  * chore(build-deb.sh): Change BUILD_DIR to dist
+  * chore(debian): Fix installation on pi-gen
+  * chore(main): Update registers list for new analog mic
+  * feat: Add gihub actions for debian package release
+
+ -- PamirAI Incorporated <support@pamir.ai>  Tue, 05 Aug 2025 15:58:23 +0530
+
 pamir-ai-soundcard-dkms (1.0.0-1) unstable; urgency=medium
 
   * Initial release of Pamir AI Soundcard DKMS modules
