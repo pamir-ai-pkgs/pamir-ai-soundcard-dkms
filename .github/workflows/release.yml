@@ -41,12 +41,24 @@ jobs:
             VERSION="v1.0.0"
           fi
           
-          # Remove 'v' prefix if present
+          # Remove 'v' prefix if present and parse version format vX.Y.Z-A
           CLEAN_VERSION=${VERSION#v}
+          
+          # Split version into semantic version and debian revision
+          if [[ "$CLEAN_VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)$ ]]; then
+            SEMANTIC_VERSION="${BASH_REMATCH[1]}"
+            DEBIAN_REVISION="${BASH_REMATCH[2]}"
+          else
+            # Fallback for other formats
+            SEMANTIC_VERSION="$CLEAN_VERSION"
+            DEBIAN_REVISION="1"
+          fi
           
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "clean_version=${CLEAN_VERSION}" >> $GITHUB_OUTPUT
-          echo "package_name=pamir-ai-soundcard-dkms_${CLEAN_VERSION}-1_all.deb" >> $GITHUB_OUTPUT
+          echo "semantic_version=${SEMANTIC_VERSION}" >> $GITHUB_OUTPUT
+          echo "debian_revision=${DEBIAN_REVISION}" >> $GITHUB_OUTPUT
+          echo "package_name=pamir-ai-soundcard-dkms_${SEMANTIC_VERSION}-${DEBIAN_REVISION}_all.deb" >> $GITHUB_OUTPUT
           
           echo "Building version: ${VERSION}"
           echo "Clean version: ${CLEAN_VERSION}"
@@ -86,8 +98,8 @@ jobs:
           sed -i "s|\$(date -R)|${CURRENT_DATE}|" debian/changelog
           
           # Update version if different from default
-          if [[ "${{ steps.version.outputs.clean_version }}" != "1.0.0" ]]; then
-            sed -i "s/1.0.0-1/${{ steps.version.outputs.clean_version }}-1/" debian/changelog
+          if [[ "${{ steps.version.outputs.semantic_version }}" != "1.0.0" ]] || [[ "${{ steps.version.outputs.debian_revision }}" != "1" ]]; then
+            sed -i "s/1.0.0-1/${{ steps.version.outputs.semantic_version }}-${{ steps.version.outputs.debian_revision }}/" debian/changelog
           fi
           
           echo "Updated changelog:"
