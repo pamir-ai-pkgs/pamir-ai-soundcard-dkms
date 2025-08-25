@@ -24,3 +24,4 @@ Module.symvers
 
 # Device tree compiled overlays
 *.dtbo
+*.cmd

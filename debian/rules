@@ -8,6 +8,8 @@ override_dh_auto_configure:
 
 override_dh_auto_build:
 	# DKMS modules are built at install time
+	# Compile device tree overlay at build time
+	dtc -@ -I dts -O dtb -o pamir-ai-soundcard.dtbo pamir-ai-soundcard-overlay.dts
 
 override_dh_auto_test:
 	# No tests to run
@@ -19,6 +21,10 @@ override_dh_auto_install:
 	install -m 644 Makefile debian/pamir-ai-soundcard-dkms/usr/src/pamir-ai-soundcard-1.0.0/
 	install -m 644 dkms.conf debian/pamir-ai-soundcard-dkms/usr/src/pamir-ai-soundcard-1.0.0/
 	install -m 644 *.dts debian/pamir-ai-soundcard-dkms/usr/src/pamir-ai-soundcard-1.0.0/
+	
+	# Install pre-compiled device tree overlay
+	install -d debian/pamir-ai-soundcard-dkms/usr/share/pamir-ai-soundcard-dkms
+	install -m 644 pamir-ai-soundcard.dtbo debian/pamir-ai-soundcard-dkms/usr/share/pamir-ai-soundcard-dkms/
 	
 	# Install documentation
 	install -d debian/pamir-ai-soundcard-dkms/usr/share/doc/pamir-ai-soundcard-dkms

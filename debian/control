@@ -14,7 +14,6 @@ Package: pamir-ai-soundcard-dkms
 Architecture: all
 Depends: ${misc:Depends},
          dkms,
-         device-tree-compiler,
          linux-headers-rpi-2712
 Recommends: alsa-utils
 Suggests: alsa-tools
