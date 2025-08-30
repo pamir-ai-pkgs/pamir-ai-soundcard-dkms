@@ -256,15 +256,18 @@ static int pamir_ai_i2c_sound_set_input_gain(struct pamir_ai_i2c_sound_data *dat
 	 * 0x00 represents 0dB
 	 *
 	 * Map 0-100 scale to ADC gain:
-	 * - 0-20: -12dB to 0dB (0x68 to 0x00)
-	 * - 21-100: 0dB to +20dB (0x00 to 0x28)
+	 * - 0-19: -12dB to just below 0dB (0x68 to 0x29)
+	 * - 20-100: 0dB to +20dB (0x00 to 0x28)
+	 * Note: Ranges designed to avoid overlap for unambiguous readback
 	 */
 
-	if (gain <= 20) {
-		/* Low gain (0-20): -12dB to 0dB */
-		adc_val = 0x68 - ((gain * (0x68 - 0x00)) / 20);
+	if (gain < 20) {
+		/* Low gain (0-19): -12dB to just below 0dB */
+		/* Map to 0x68 down to 0x29 (avoiding overlap with positive range) */
+		adc_val = 0x68 - ((gain * (0x68 - 0x29)) / 19);
 	} else {
-		/* Higher gain (21-100): 0dB to +20dB */
+		/* Higher gain (20-100): 0dB to +20dB */
+		/* Map to 0x00 up to 0x28 */
 		adc_val = ((gain - 20) * 0x28) / 80;
 	}
 
@@ -420,15 +423,12 @@ static int pamir_ai_i2c_sound_get_input_gain(struct pamir_ai_i2c_sound_data *dat
 	if (adc_val >= 0x68) {
 		/* Minimum gain (-12dB or below) */
 		gain = 0;
-	} else if (adc_val > 0x00) {
-		/* -12dB to 0dB (0x68 to 0x00) maps to 0-20% */
-		gain = ((0x68 - adc_val) * 20) / 0x68;
 	} else if (adc_val <= 0x28) {
 		/* 0dB to +20dB (0x00 to 0x28) maps to 20-100% */
 		gain = 20 + ((adc_val * 80) / 0x28);
 	} else {
-		/* Above +20dB, cap at 100% */
-		gain = 100;
+		/* -12dB to just below 0dB (0x29 to 0x67) maps to 1-19% */
+		gain = ((0x68 - adc_val) * 19) / (0x68 - 0x29);
 	}
 
 	/* Store the read input gain value */
