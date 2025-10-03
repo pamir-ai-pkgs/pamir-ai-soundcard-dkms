@@ -8,9 +8,9 @@ Build-Depends: debhelper-compat (= 13),
                dh-sequence-dkms,
                device-tree-compiler,
                lintian
-Homepage: https://github.com/pamir-ai/pamir-ai-soundcard-dkms
-Vcs-Git: https://github.com/pamir-ai/pamir-ai-soundcard-dkms.git
-Vcs-Browser: https://github.com/pamir-ai/pamir-ai-soundcard-dkms
+Homepage: https://github.com/pamir-ai-pkgs/pamir-ai-soundcard-dkms
+Vcs-Git: https://github.com/pamir-ai-pkgs/pamir-ai-soundcard-dkms.git
+Vcs-Browser: https://github.com/pamir-ai-pkgs/pamir-ai-soundcard-dkms
 
 Package: pamir-ai-soundcard-dkms
 Architecture: all
