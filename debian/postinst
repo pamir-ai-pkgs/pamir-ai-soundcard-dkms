@@ -2,148 +2,80 @@
 
 set -e
 
-PACKAGE_NAME="pamir-ai-soundcard"
-PACKAGE_VERSION="1.0.0"
-DKMS_SOURCE_DIR="/usr/src/${PACKAGE_NAME}-${PACKAGE_VERSION}"
-OVERLAY_DEST="/boot/firmware/overlays/pamir-ai-soundcard.dtbo"
+#DEBHELPER#
+
+# DKMS variables
+DKMS_NAME="pamir-ai-soundcard"
+DKMS_VERSION="1.0.0"
+DKMS_SOURCE_DIR="/usr/src/${DKMS_NAME}-${DKMS_VERSION}"
+source "${DKMS_SOURCE_DIR}/platform-detect.sh"
 
 case "$1" in
 configure)
-	echo "Configuring pamir-ai-soundcard-dkms..."
+	# Detect platform
+	PLATFORM=$(detect_platform)
+	if [ "$PLATFORM" != "rpi" ]; then
+		echo "Warning: Unknown platform detected, skipping overlay installation" >&2
+		exit 0
+	fi
+	echo "Detected platform: $PLATFORM"
 
-	# Add to DKMS
-	if [ -f "${DKMS_SOURCE_DIR}/dkms.conf" ]; then
-		echo "Adding ${PACKAGE_NAME} to DKMS..."
-		dkms add ${DKMS_VERSIONS} -m "${PACKAGE_NAME}" -v "${PACKAGE_VERSION}" || true
+	# Get platform-specific paths and names
+	OVERLAY_DIR=$(get_overlay_dir "$PLATFORM")
+	CONFIG_FILE=$(get_config_file "$PLATFORM")
+	OVERLAY_NAME=$(get_overlay_name "$PLATFORM")
+	DTS_FILE=$(get_dts_file "$PLATFORM")
+	OVERLAY_SOURCE="${DKMS_SOURCE_DIR}/${DTS_FILE}"
+	OVERLAY_DEST="${OVERLAY_DIR}${OVERLAY_NAME}.dtbo"
 
-		# Build the module
-		echo "Building ${PACKAGE_NAME} DKMS module..."
-		if dkms build ${DKMS_VERSIONS} -m "${PACKAGE_NAME}" -v "${PACKAGE_VERSION}"; then
-			echo "Successfully built ${PACKAGE_NAME} modules"
+	# Create overlay directory if it doesn't exist
+	if [ ! -d "$OVERLAY_DIR" ]; then
+		echo "Creating overlay directory: $OVERLAY_DIR"
+		mkdir -p "$OVERLAY_DIR"
+	fi
 
-			# Install the module
-			echo "Installing ${PACKAGE_NAME} DKMS module..."
-			if dkms install ${DKMS_VERSIONS} -m "${PACKAGE_NAME}" -v "${PACKAGE_VERSION}"; then
-				echo "Successfully installed ${PACKAGE_NAME} modules"
-			else
-				echo "Warning: Failed to install ${PACKAGE_NAME} modules"
+	# Compile and install device tree overlay
+	if [ -f "$OVERLAY_SOURCE" ] && [ -d "$OVERLAY_DIR" ]; then
+		echo "Compiling device tree overlay from $OVERLAY_SOURCE..."
+		if dtc -@ -I dts -O dtb -o "$OVERLAY_DEST" "$OVERLAY_SOURCE" 2>/dev/null; then
+			echo "Device tree overlay successfully installed at $OVERLAY_DEST"
+
+			if [ -f "$CONFIG_FILE" ]; then
+				# Raspberry Pi: dtoverlay= syntax
+				if [ "$PLATFORM" = "rpi" ]; then
+					# Check and add dtoverlay
+					if ! grep -q "^dtoverlay=${OVERLAY_NAME}" "$CONFIG_FILE"; then
+						echo "" >>"$CONFIG_FILE"
+						echo "# Pamir AI Soundcard - Added by pamir-ai-soundcard-dkms" >>"$CONFIG_FILE"
+						echo "dtoverlay=${OVERLAY_NAME}" >>"$CONFIG_FILE"
+					fi
+
+					# Check and add i2c_arm parameter
+					if ! grep -q "^dtparam=i2c_arm=on" "$CONFIG_FILE"; then
+						echo "dtparam=i2c_arm=on" >>"$CONFIG_FILE"
+					fi
+
+					# Check and add i2s parameter
+					if ! grep -q "^dtparam=i2s=on" "$CONFIG_FILE"; then
+						echo "dtparam=i2s=on" >>"$CONFIG_FILE"
+					fi
+
+					echo "Device tree overlay and parameters configured in $CONFIG_FILE"
+					echo "Please reboot for the overlay to take effect"
+				fi
 			fi
 		else
-			echo "Warning: Failed to build ${PACKAGE_NAME} modules"
+			echo "Warning: Failed to compile device tree overlay (this is normal if not on target hardware)"
 		fi
-	else
-		echo "Error: DKMS configuration file not found at ${DKMS_SOURCE_DIR}/dkms.conf"
 	fi
-
-	# Install pre-compiled device tree overlay
-	OVERLAY_COMPILED="/usr/share/pamir-ai-soundcard-dkms/pamir-ai-soundcard.dtbo"
-	if [ -f "${OVERLAY_COMPILED}" ]; then
-		echo "Installing device tree overlay..."
-
-		# Create overlay directory if it doesn't exist (only if parent exists)
-		if [ -d "/boot/firmware" ]; then
-			mkdir -p "$(dirname "${OVERLAY_DEST}")"
-
-			# Copy the pre-compiled overlay
-			if cp "${OVERLAY_COMPILED}" "${OVERLAY_DEST}"; then
-				echo "Device tree overlay installed to ${OVERLAY_DEST}"
-			else
-				echo "Warning: Failed to copy device tree overlay"
-			fi
-		else
-			echo "Warning: /boot/firmware not found, skipping overlay installation"
-		fi
-	else
-		echo "Warning: Pre-compiled device tree overlay not found at ${OVERLAY_COMPILED}"
-	fi
-
-	# Update module dependencies
-	echo "Updating module dependencies..."
-	if [ -d "/lib/modules/$(uname -r)" ]; then
-		depmod -a || true
-	else
-		echo "Skipping depmod in cross-compilation environment"
-	fi
-
-	# Auto-configure device tree overlay and parameters in config.txt
-	CONFIG_FILE="/boot/firmware/config.txt"
-	OVERLAY_LINE="dtoverlay=pamir-ai-soundcard"
-	I2C_ARM_LINE="dtparam=i2c_arm=on"
-	I2S_LINE="dtparam=i2s=on"
-
-	if [ -f "${CONFIG_FILE}" ]; then
-		echo "Configuring device tree overlay and parameters in ${CONFIG_FILE}..."
-
-		# Track if we need to add section header
-		NEEDS_HEADER=false
-
-		# Check if overlay is already configured
-		if ! grep -q "^${OVERLAY_LINE}" "${CONFIG_FILE}"; then
-			NEEDS_HEADER=true
-		fi
-
-		# Check if I2C ARM parameter is already configured
-		if ! grep -q "^${I2C_ARM_LINE}" "${CONFIG_FILE}"; then
-			NEEDS_HEADER=true
-		fi
-
-		# Check if I2S parameter is already configured
-		if ! grep -q "^${I2S_LINE}" "${CONFIG_FILE}"; then
-			NEEDS_HEADER=true
-		fi
-
-		# Add configuration if needed
-		if [ "$NEEDS_HEADER" = true ]; then
-			# Check if file doesn't end with newline, add one if needed
-			if [ -s "${CONFIG_FILE}" ] && [ "$(tail -c1 "${CONFIG_FILE}" | wc -l)" -eq 0 ]; then
-				echo "" >>"${CONFIG_FILE}"
-			fi
-
-			echo "# Pamir AI Soundcard - Added by pamir-ai-soundcard-dkms package" >>"${CONFIG_FILE}"
-
-			# Add overlay if not present
-			if ! grep -q "^${OVERLAY_LINE}" "${CONFIG_FILE}"; then
-				echo "${OVERLAY_LINE}" >>"${CONFIG_FILE}"
-			fi
-
-			# Add I2C ARM parameter if not present
-			if ! grep -q "^${I2C_ARM_LINE}" "${CONFIG_FILE}"; then
-				echo "${I2C_ARM_LINE}" >>"${CONFIG_FILE}"
-			fi
-
-			# Add I2S parameter if not present
-			if ! grep -q "^${I2S_LINE}" "${CONFIG_FILE}"; then
-				echo "${I2S_LINE}" >>"${CONFIG_FILE}"
-			fi
-
-			echo "Device tree overlay and parameters configured in ${CONFIG_FILE}"
-		else
-			echo "Device tree overlay and parameters already configured in ${CONFIG_FILE}"
-		fi
-	else
-		echo "Warning: ${CONFIG_FILE} not found, overlay not auto-configured"
-	fi
-
-	echo ""
-	echo "Pamir AI Soundcard DKMS installation completed!"
-	echo ""
-	echo "The soundcard has been automatically configured in ${CONFIG_FILE}"
-	echo "Please reboot your system to activate the soundcard."
-	echo ""
-	echo "Or to load modules immediately without reboot:"
-	echo "  sudo modprobe pamir-ai-soundcard"
-	echo "  sudo modprobe pamir-ai-i2c-sound"
-	echo "  sudo modprobe pamir-ai-rpi-soundcard"
 	;;
 
 abort-upgrade | abort-remove | abort-deconfigure) ;;
 
 *)
-	echo "postinst called with unknown argument \`$1'" >&2
+	echo "postinst called with unknown argument '$1'" >&2
 	exit 1
 	;;
 esac
-
-#DEBHELPER#
 
 exit 0

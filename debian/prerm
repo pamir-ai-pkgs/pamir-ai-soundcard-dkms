@@ -2,63 +2,56 @@
 
 set -e
 
-PACKAGE_NAME="pamir-ai-soundcard"
-PACKAGE_VERSION="1.0.0"
+# DKMS variables
+DKMS_NAME="pamir-ai-soundcard"
+DKMS_VERSION="1.0.0"
+DKMS_SOURCE_DIR="/usr/src/${DKMS_NAME}-${DKMS_VERSION}"
+source "${DKMS_SOURCE_DIR}/platform-detect.sh"
 
 case "$1" in
-    remove|upgrade|deconfigure)
-        echo "Removing pamir-ai-soundcard-dkms..."
-        
-        # Unload modules if they are loaded
-        echo "Unloading kernel modules..."
-        for module in pamir-ai-soundcard pamir-ai-i2c-sound pamir-ai-rpi-soundcard; do
-            if lsmod | grep -q "^${module}"; then
-                echo "Unloading ${module}..."
-                rmmod "${module}" || echo "Warning: Failed to unload ${module}"
-            fi
-        done
-        
-        # Remove device tree overlay and parameter configuration from config.txt
-        CONFIG_FILE="/boot/firmware/config.txt"
-        OVERLAY_LINE="dtoverlay=pamir-ai-soundcard"
-        I2C_ARM_LINE="dtparam=i2c_arm=on"
-        I2S_LINE="dtparam=i2s=on"
-        COMMENT_LINE="# Pamir AI Soundcard - Added by pamir-ai-soundcard-dkms package"
-        
-        if [ -f "${CONFIG_FILE}" ]; then
-            echo "Removing device tree overlay and parameter configuration from ${CONFIG_FILE}..."
-            
-            # Create a temporary file without the pamir-ai lines
-            TEMP_FILE=$(mktemp)
-            
-            # Remove the overlay line, parameter lines, and the comment line
-            grep -v "^${OVERLAY_LINE}" "${CONFIG_FILE}" | \
-            grep -v "^${I2C_ARM_LINE}" | \
-            grep -v "^${I2S_LINE}" | \
-            grep -v "^${COMMENT_LINE}" > "${TEMP_FILE}"
-            
-            # Replace the original file
-            mv "${TEMP_FILE}" "${CONFIG_FILE}"
-            
-            echo "Device tree overlay and parameter configuration removed from ${CONFIG_FILE}"
-        else
-            echo "Warning: ${CONFIG_FILE} not found, skipping config removal"
-        fi
-        
-        # Remove from DKMS
-        if dkms status -m "${PACKAGE_NAME}" -v "${PACKAGE_VERSION}" | grep -q "${PACKAGE_NAME}"; then
-            echo "Removing ${PACKAGE_NAME} from DKMS..."
-            dkms remove -m "${PACKAGE_NAME}" -v "${PACKAGE_VERSION}" --all || true
-        fi
-        ;;
-        
-    failed-upgrade)
-        ;;
-        
-    *)
-        echo "prerm called with unknown argument \`$1'" >&2
-        exit 1
-        ;;
+remove | upgrade | deconfigure)
+	# Remove DKMS module
+	echo "Removing ${DKMS_NAME} ${DKMS_VERSION} from DKMS..."
+	if [ "$(dkms status -m ${DKMS_NAME} -v ${DKMS_VERSION})" ]; then
+		dkms remove -m ${DKMS_NAME} -v ${DKMS_VERSION} --all
+	fi
+
+	# Detect platform
+	PLATFORM=$(detect_platform)
+	if [ "$PLATFORM" != "rpi" ]; then
+		echo "Warning: Unknown platform, skipping config cleanup" >&2
+		exit 0
+	fi
+
+	# Get platform-specific paths and names
+	OVERLAY_DIR=$(get_overlay_dir "$PLATFORM")
+	CONFIG_FILE=$(get_config_file "$PLATFORM")
+	OVERLAY_NAME=$(get_overlay_name "$PLATFORM")
+	OVERLAY_DEST="${OVERLAY_DIR}${OVERLAY_NAME}.dtbo"
+
+	# Remove device tree overlay
+	[ -f "$OVERLAY_DEST" ] && rm -f "$OVERLAY_DEST"
+
+	# Remove from config file
+	if [ -f "$CONFIG_FILE" ]; then
+		if grep -q "^dtoverlay=${OVERLAY_NAME}" "$CONFIG_FILE"; then
+			echo "Removing overlay from $CONFIG_FILE"
+			sed -i "/^dtoverlay=${OVERLAY_NAME}/d" "$CONFIG_FILE"
+
+			# Also remove associated parameters and comment added by this package
+			sed -i "/^# Pamir AI Soundcard - Added by pamir-ai-soundcard-dkms/d" "$CONFIG_FILE"
+
+			echo "Please reboot for changes to take effect"
+		fi
+	fi
+	;;
+
+failed-upgrade) ;;
+
+*)
+	echo "prerm called with unknown argument '$1'" >&2
+	exit 1
+	;;
 esac
 
 #DEBHELPER#

@@ -5,50 +5,53 @@ set -e
 PACKAGE_NAME="pamir-ai-soundcard"
 PACKAGE_VERSION="1.0.0"
 
+# platform detection
+detect_rpi() {
+	if [ -f /proc/device-tree/compatible ]; then
+		grep -q "brcm,bcm2712" /proc/device-tree/compatible 2>/dev/null
+		return $?
+	fi
+	return 1
+}
+
 case "$1" in
 install | upgrade)
-	# Check if running in a cross-compilation environment
-	if [ ! -d "/lib/modules/$(uname -r 2>/dev/null)" ] || [ -n "${CROSS_COMPILE}" ]; then
+	# Skip validation in cross-compilation/build environments
+	if [ -n "${CROSS_COMPILE}" ] || [ ! -d "/lib/modules/$(uname -r 2>/dev/null)" ]; then
+		echo "Build/cross-compilation environment detected, skipping platform check"
 		exit 0
 	fi
 
-	# Check if DKMS is available (silent check)
-	command -v dkms >/dev/null 2>&1 || true
+	# Validate platform BEFORE installation
+	if ! detect_rpi; then
+		cat >&2 <<EOF
+ERROR: Incompatible Hardware Platform
 
-	# Clean up any previous manual installation silently
+pamir-ai-soundcard-dkms requires Raspberry Pi CM5/Pi 5 hardware with
+TLV320AIC3204 audio codec. Your system does not meet these requirements.
+
+Detected: Non-Raspberry Pi platform (BCM2712 not found)
+
+This package is hardware-specific and cannot be installed on incompatible platforms.
+EOF
+		exit 1
+	fi
+
+	# Check existing installation and cleanup if needed
 	if [ -d "/usr/src/${PACKAGE_NAME}-${PACKAGE_VERSION}" ] && [ ! -f "/var/lib/dpkg/info/pamir-ai-soundcard-dkms.list" ]; then
-		# Try to remove from DKMS if it exists
 		if command -v dkms >/dev/null 2>&1; then
 			if dkms status -m "${PACKAGE_NAME}" -v "${PACKAGE_VERSION}" 2>/dev/null | grep -q "${PACKAGE_NAME}"; then
 				dkms remove -m "${PACKAGE_NAME}" -v "${PACKAGE_VERSION}" --all 2>/dev/null || true
 			fi
 		fi
-
-		# Remove the source directory
 		rm -rf "/usr/src/${PACKAGE_NAME}-${PACKAGE_VERSION}"
 	fi
-
-	# Check for conflicting modules silently
-	for module in pamir-ai-soundcard pamir-ai-i2c-sound pamir-ai-rpi-soundcard; do
-		lsmod 2>/dev/null | grep -q "^${module}" || true
-	done
-
-	# Check available disk space silently
-	if command -v df >/dev/null 2>&1; then
-		AVAILABLE_SPACE=$(df /usr/src 2>/dev/null | awk 'NR==2 {print $4}')
-		if [ -n "${AVAILABLE_SPACE}" ] && [ "${AVAILABLE_SPACE}" -lt 51200 ]; then
-			echo "Warning: Low disk space in /usr/src" >&2
-		fi
-	fi
-
-	# Check for kernel headers silently
-	[ -d "/lib/modules/$(uname -r)/build" ] || true
 	;;
 
 abort-upgrade) ;;
 
 *)
-	echo "preinst called with unknown argument \`$1'" >&2
+	echo "preinst called with unknown argument '$1'" >&2
 	exit 1
 	;;
 esac
