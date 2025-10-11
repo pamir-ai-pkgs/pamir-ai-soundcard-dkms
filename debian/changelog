@@ -34,4 +34,4 @@ pamir-ai-soundcard-dkms (1.0.0-1) unstable; urgency=medium
   * Volume control via sysfs interface
   * ALSA sound card interface
 
- -- PamirAI Incorporated <founders@pamir.ai>  $(date -R)
+ -- PamirAI Incorporated <founders@pamir.ai>  Fri, 09 Aug 2025 21:24:00 +0530
