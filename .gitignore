@@ -10,9 +10,16 @@ dist/
 *.dsc
 *.tar.*
 *.upload
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/*.debhelper*
+debian/*.substvars
+debian/pamir-ai-soundcard-dkms/
 
 # DKMS build artifacts
 *.o
+*.o.d
 *.ko
 *.mod
 *.mod.c
@@ -24,15 +31,6 @@ Module.symvers
 
 # Device tree compiled overlays
 *.dtbo
-
-# Debian packaging artifacts
-debian/.debhelper/
-debian/debhelper-build-stamp
-debian/*.debhelper.log
-debian/*.substvars
-debian/files
-debian/pamir-ai-soundcard-dkms/
-debian/tmp/
 
 # Additional kernel build artifacts
 .*.cmd
