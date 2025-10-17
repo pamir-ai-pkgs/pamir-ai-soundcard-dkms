@@ -1,3 +1,24 @@
+pamir-ai-soundcard-dkms (2.0.0) unstable; urgency=medium
+
+  [ utsavbalar1231 ]
+  * pamir-ai-i2c-sound-main: Fix input gain control register mapping overlap
+  * refactor(debian): update for modern debian packaging
+  * refactor(debian): modernize DKMS packaging with dh-sequence-dkms
+  * fix(debian): update repository URLs to pamir-ai-pkgs org
+  * refactor(build): improve dependency checks and cross-compilation
+  * fix(debian): update repository URLs and packaging metadata
+  * refactor(debian): improve build override messages and add test skip
+  * refactor(build): replace build-deb.sh with Justfile
+  * build: add lintian debian profile to debuild
+  * fix(debian): cleanup redundent lintian overrides
+  * fix(debian): correct initial release date in changelog
+  * fix(debian): remove unused dkms checks in preinst
+  * chore(.gitignore): ignore some more build artifacts
+  * feat(build): add architecture parameter to build recipe
+  * chore(debian): add git-buildpackage configuratio
+
+ -- PamirAI Incorporated <founders@pamir.ai>  Sat, 18 Oct 2025 00:08:34 +0530
+
 pamir-ai-soundcard-dkms (1.0.0-3) unstable; urgency=medium
 
   [ utsavbalar1231 ]
