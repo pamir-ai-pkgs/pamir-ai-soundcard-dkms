@@ -158,7 +158,7 @@ dmesg | grep -i pamir
 ## Uninstallation
 
 ```bash
-sudo dkms remove pamir-ai-soundcard/2.0.0 --all
+sudo dkms remove pamir-ai-soundcard/2.0.1 --all
 ```
 
 ## Technical Details

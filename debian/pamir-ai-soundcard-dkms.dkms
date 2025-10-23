@@ -1,5 +1,5 @@
 PACKAGE_NAME="pamir-ai-soundcard"
-PACKAGE_VERSION="2.0.0"
+PACKAGE_VERSION="2.0.1"
 
 # Build all three modules
 BUILT_MODULE_NAME[0]="pamir-ai-soundcard"
