@@ -16,7 +16,7 @@ Package: pamir-ai-soundcard-dkms
 Architecture: all
 Depends: ${misc:Depends},
          device-tree-compiler,
-         raspberrypi-kernel-headers,
+         raspberrypi-kernel-headers | linux-headers-rpi-2712
 Recommends: alsa-utils
 Suggests: alsa-tools
 Description: Pamir AI Soundcard DKMS kernel modules (Raspberry Pi CM5)
