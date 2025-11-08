@@ -6,7 +6,7 @@
 set -e
 
 PACKAGE_NAME="pamir-ai-soundcard"
-PACKAGE_VERSION="2.0.1"
+PACKAGE_VERSION="2.0.2"
 DKMS_SOURCE_DIR="/usr/src/${PACKAGE_NAME}-${PACKAGE_VERSION}"
 
 # Check if running as root

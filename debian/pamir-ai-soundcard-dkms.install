@@ -1,8 +1,8 @@
 #!/usr/bin/dh-exec
 
-*.c usr/src/pamir-ai-soundcard-2.0.1/
-Makefile usr/src/pamir-ai-soundcard-2.0.1/
-dkms.conf usr/src/pamir-ai-soundcard-2.0.1/
-*.dts usr/src/pamir-ai-soundcard-2.0.1/
-platform-detect.sh usr/src/pamir-ai-soundcard-2.0.1/
+*.c usr/src/pamir-ai-soundcard-2.0.2/
+Makefile usr/src/pamir-ai-soundcard-2.0.2/
+dkms.conf usr/src/pamir-ai-soundcard-2.0.2/
+*.dts usr/src/pamir-ai-soundcard-2.0.2/
+platform-detect.sh usr/src/pamir-ai-soundcard-2.0.2/
 README.md usr/share/doc/pamir-ai-soundcard-dkms/
