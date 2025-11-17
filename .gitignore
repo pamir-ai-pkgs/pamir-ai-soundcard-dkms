@@ -29,6 +29,9 @@ debian/pamir-ai-soundcard-dkms/
 modules.order
 Module.symvers
 
+# Generated DKMS configuration (built from dkms.conf.in)
+dkms.conf
+
 # Device tree compiled overlays
 *.dtbo
 
